@@ -17,13 +17,15 @@ def displayMain():
     print("1: Login (Sign-In)")
     print("2: Check-Out Item")
     print("3: Check-In Item")
-    print("4: Attend Event")
-    print("5: Check Item Availability")
-    #Could be hidden from main menu or reject it if they're a customer
-    print("6: Remove Item")
-    print("7: Add Item")
-    print("8: Send Overdue Notice")
-    print("9: Send Event Notice")
+    print("4: Add Event")
+    print("5: Attend Event")
+    print("6: View Event")
+    print("7: Check Item Availability")
+    print("8: Add Item")
+    print("9: Remove Item")
+    print("10: View Your Checked Out Items")
+    print("11: Get Item Rating")
+    print("12: Rank Items")
 
 def user_sign_in():
     #Check to see if the user has signed up for the library
@@ -102,8 +104,8 @@ def create_librarian():
     print(mycursor.rowcount, "record inserted.")
 
 def check_librarian_id():
-    user_id = int(input("What is your user ID?"))
-    pass_word = input("What is your password? ")
+    user_id = int(input("What is your Librarian ID?"))
+    pass_word = input("What is your Librarian password? ")
     librarian_check = False
     select_customer_id_query = "SELECT id, passwd FROM Librarian"
     #Looping with all the queries to check that the condition is true
@@ -128,14 +130,16 @@ def check_out_item(user_login):
         cursor.execute(select_item_id_query)
         result = cursor.fetchall()
         for row in result:
-            if(isinstance(item_id,int) or row[0] == 0):
+            if(not isinstance(item_id,int) or row[0] == None):
                 print("We are very sorry but either the item id is invalid or the item is checked out")
+                quit()
             else:
-                 sql = "INSERT INTO Item (id, genre, itemName, rating, Item_Aval, holder_id) VALUES (%s, %s, %s, %s, %s, %s)"
-                 val = ('', '', '', '', 0, user_id)
-                 mycursor.execute(sql,val)
+                 sql = "UPDATE Item SET Item_Aval =%s, holder_id =%s WHERE id =%s" % (0, user_id, item_id)
+                 #val = (item_id, '', '', None, 0, user_id)
+                 mycursor.execute(sql)
                  mydb.commit()
-                 print(mycursor.rowcount, "record inserted.")
+                 
+        print("Congrats you've checked out the item!")
 
 def check_in_item(user_login):
     mycursor = mydb.cursor()
@@ -151,27 +155,47 @@ def check_in_item(user_login):
         result = cursor.fetchall()
         for row in result:
             if(row[0] == user_id):
-                sql = "INSERT INTO Item (id, genre, itemName, rating, Item_Aval, holder_id) VALUES (%s, %s, %s, %s, %s, %s)"
-                val = ('', '', '', '', 1, '')
-                mycursor.execute(sql,val)
+                sql = "UPDATE Item SET Item_Aval =%s, holder_id =%s WHERE id =%s" % (1, 0, item_id)
+                #val = ('', '', '', '', 1, '')
+                mycursor.execute(sql)
                 mydb.commit()
-                print(mycursor.rowcount, "record inserted.")
+        print("Congrats you've checked in an item!")
 
 # "Done"
 def AttendEvent():
     mycursor = mydb.cursor()
-    eventID = int(input())
-    userID = int(input())
-    sql = 'INSERT INTO `Event` (`event_id`,`participant_id`,start_dt_time,end_dt_tm,notice) VALUES (%s, %s, %s, %s, %s)'
-    print("You have been registered for the event!")
-    val = (eventID, userID, "2017-07-23","2017-07-23", "2017-07-23")
+    eventID = int(input("What is the event ID? "))
+    userID = int(input("What is your user ID? "))
+    
+    select_event_time_query = "SELECT event_id, start_dt_time FROM Event"
+    with mydb.cursor() as cursor:
+        cursor.execute(select_event_time_query)
+        result = cursor.fetchall()
+        for row in result:
+            if(eventID == row[0]):
+                print("This event will start at:" + row[1])
+    sql = 'INSERT INTO `Event` (`event_id`,`participant_id`,start_dt_time) VALUES (%s, %s, %s)'
+    val = (None, userID, '')
     mycursor.execute(sql,val)
     mydb.commit()
+    print("You have been registered for the event!")
+
+# "Done"
+def AddEvent():
+    mycursor = mydb.cursor()
+    make_event_id = input("What would you like the event ID to be?")
+    make_event_time = input("What time is the event starting?")
+    #Possible interaction with other user ids to make sure that they don't match
+    sql = 'INSERT INTO `Event` (`event_id`,`participant_id`,start_dt_time) VALUES (%s, %s, %s)'
+    val = (make_event_id, None, make_event_time)
+    mycursor.execute(sql,val)
+    mydb.commit()
+    print(mycursor.rowcount, "record inserted.")
 
 
 # Works Correctly -- add error for invalid id
 def CheckItemAvailable():
-    itemID = int(input())
+    itemID = int(input("What is the item id you're looking for? "))
     select_item_id_query = "SELECT id, Item_Aval, itemName FROM Item"
     with mydb.cursor() as mycursor:
         mycursor.execute(select_item_id_query)
@@ -208,7 +232,8 @@ def getItemRating():
         result = mycursor.fetchall()
         for row in result:
             if(row[0] == itemID):
-                print('Item with ID ' + str(row[0]) + ' is called ' + row[1] + '. It is rated ' + str(row[2]) +' by other customers!')
+                print('\nItem with ID ' + str(row[0]) + ' is called ' + row[1] + '. It is rated ' + str(row[2]) +'/100 by other customers!\n')
+
 #Works Cureently
 def getItemRanking():
     print('What number of items would you like to see ranked? ', end = '')
@@ -219,49 +244,123 @@ def getItemRanking():
         mycursor.execute(select_item_id_query)
         result = mycursor.fetchall()
         count = 1
-        print('Ranking items by times they have been checked out!')
+        print('\nRanking items by their item rating!')
         for row in result:
             if(count > numItems):
                 break
             print('RANK ' + str(count) + ' ITEM')
             print('Name: ', row[2])
-            print('Availability: ' + 'Available' if row[4] == True else 'Unavailable')
+            print('Availability: Available' if row[4] == True else 'Availability: Unavailable')
             print('Rating: ', str(row[3]))
-            print('Times checked out: ', str(row[6]))
             count = count + 1
             print()
 
-#Something
-def runner_trackstar():
-    displayMain()
+def addItem() :
+    mycursor = mydb.cursor()
+    make_librarian = check_librarian_id()
+    sql = ''
+    val = None
+    if(make_librarian):
+
+        itemID = input("Please enter the items unique ID: ")
+        itemName = input("Please enter the items name: ")
+        itemGenre = input("Please enter the items genre: ")
+        itemType = input("Please enter the items type: ")
+
+
+        if itemType == "Book" :
+            sql = 'INSERT INTO Item (id,genre, itemName, rating, Item_Aval, holder_id) VALUES (%s,%s, %s, %s, %s, %s)'
+            val = (itemID, itemGenre, itemName, None, 1, None)
+        elif itemType == "Magazine" :
+            sql = 'INSERT INTO Item (id,genre, itemName, rating, Item_Aval, holder_id) VALUES (%s,%s, %s, %s, %s, %s)'
+            val = (itemID, itemGenre, itemName, None, 1, None)
+        elif itemType == "Album" :
+            sql = 'INSERT INTO Item (id,genre, itemName, rating, Item_Aval, holder_id) VALUES (%s,%s, %s, %s, %s, %s)'
+            val = (itemID, itemGenre, itemName, None, 1, None)
+        elif itemType == "Movie" :
+            sql = 'INSERT INTO Item (id,genre, itemName, rating, Item_Aval, holder_id) VALUES (%s,%s, %s, %s, %s, %s)'
+            val = (itemID, itemGenre, itemName, None, 1, None)
+        else:
+            print("The is no item type " + itemType + ". This function is aborting. Please try again.")
+            quit()
+        print("Item has been added sucessfully!")
+        mycursor.execute(sql, val)
+        mydb.commit()
+    else:
+        print("You are not a librarian!")
+        quit()
+
+def viewItems() :
+    mycursor = mydb.cursor()
+    uID = input("Please enter the users id.")
+
+    sql = 'SELECT id, itemName FROM Item WHERE holder_id=%s' % (uID)
+
+    mycursor.execute(sql)
+    records = mycursor.fetchall()
+
+    print("\nItems you have checked out:")
+    for row in records :
+        print("Item ID: ", row[0])
+        print("Name: ", row[1])
+        print("\n")
+
+def viewEvent():
+    mycursor = mydb.cursor()
+    eID = input("Please enter the event id.")
+
+    sql = 'SELECT start_dt_time FROM Event WHERE event_id=%s' % (eID)
+    #val = (eID)
+    mycursor.execute(sql)
+    row = mycursor.fetchall()
+    
+    print("The event start time is", row[0])
+
+def choice_person(user_login):
     user_choice = int(input("Please choose one of the options: "))
-    user_login = False
-    #python doesn't have switch statements
     if(user_choice == 0):
-        print("It's time to go buddy")
+        print("\nThanks for coming to the library! We hope you enjoyed your stay!")
         quit()
     elif(user_choice == 1):
         user_login = user_sign_in()
-        displayMain()
-        anotha_one = int(input("Please choose another choice"))
     elif(user_choice == 2):
         check_out_item(user_login)
     elif(user_choice == 3):
         check_in_item(user_login)
     elif(user_choice == 4):
-        AttendEvent()
+        AddEvent()
     elif(user_choice == 5):
-        CheckItemAvailable()
-        getItemRating()
-        getItemRanking()
+        AttendEvent()
     elif(user_choice == 6):
+        viewEvent()
+    elif(user_choice == 7):
+        CheckItemAvailable()
+    elif(user_choice == 8):
+        addItem()
+    elif(user_choice == 9):
         remove_item()
-    #elif(user_choice == 7):
-#
-    #elif(user_choice == 8):
-        #
-    #elif(user_choice == 9):
-        #
+    elif(user_choice == 10):
+        viewItems()
+    elif(user_choice == 11):
+        getItemRating()
+    elif(user_choice == 12):
+        getItemRanking()
+        
+    return user_login,user_choice
+#Something
+def runner_trackstar():
+    #displayMain()
+   
+    user_login = False
+    choice_user = 1
+    while(True):
+        if(choice_user != 0):
+            displayMain()
+            user_login,choice_user = choice_person(user_login)
+        else:
+            quit()
+            break
+
 
 
 if __name__ == "__main__":

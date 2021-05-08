@@ -23,9 +23,7 @@ CREATE TABLE PersonName (
 CREATE TABLE Event (
     event_id INT AUTO_INCREMENT,
     participant_id INT,
-    start_dt_time TIMESTAMP,
-    end_dt_tm TIMESTAMP,
-    notice TIMESTAMP,
+    start_dt_time VARCHAR(150),
     PRIMARY KEY(event_id)
 );
 CREATE TABLE Item (
@@ -35,7 +33,6 @@ CREATE TABLE Item (
     rating INT check (rating >= 0 and rating <= 100),
     Item_Aval BOOL,
     holder_id INT REFERENCES Customer(id),
-    times_checked_out INT,
     PRIMARY KEY(id)
 );
 CREATE TABLE Book (
@@ -63,3 +60,8 @@ CREATE TABLE Movie (
     movLength VARCHAR(80)
 );
 
+INSERT INTO Item VALUES (151541, '', 'Test', 75, 1, 0);
+INSERT INTO Item VALUES (654565, '', 'Leo--Test', 13, 1, 0);
+INSERT INTO Item VALUES (754454, '', 'Andrew--Test', 20, 1, 0);
+
+INSERT INTO Librarian VALUES (534685,'bruh','Leo','Flaker',75000,40,"lflaker@gmail.com");
