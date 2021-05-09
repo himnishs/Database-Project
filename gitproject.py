@@ -9,7 +9,7 @@ mydb = mysql.connector.connect(
 
 def initDB():
     mycursor = mydb.cursor()
-    mycursor.execute('USE library_database') #Change this to whatever your schema is
+    mycursor.execute('USE new_schema') #Change this to whatever your schema is
 
 def displayMain():
     print("-----Menu-----")
@@ -30,11 +30,11 @@ def displayMain():
 def user_sign_in():
     #Check to see if the user has signed up for the library
     mycursor = mydb.cursor()
-    check_id = int(input("Have you made an account at the library? (1 -- yes, 0 -- no)"))
+    check_id = int(input("Have you made an account at the library? (1 -- yes, 0 -- no) "))
     user_check = True
     logged_in = False
     if(check_id):
-         user_id = int(input("What is your user ID?"))
+         user_id = int(input("What is your user ID? "))
          pass_word = input("What is your password? ")
          select_customer_id_query = "SELECT id, passwd FROM Customer"
          #Looping with all the queries to check that the condition is true
@@ -47,7 +47,7 @@ def user_sign_in():
                      #Place Holder for the logged_in = true
          #Check if the ID exists into the database
     else:
-        make_id = int(input("Would you like to make an account at the library? (1 -- yes, 0 --no)"))
+        make_id = int(input("Would you like to make an account at the library? (1 -- yes, 0 --no) "))
         if(make_id):
             create_account()
         else:
@@ -56,9 +56,9 @@ def user_sign_in():
 
 def create_account():
     mycursor = mydb.cursor()
-    make_user_id = input("What would you like your username to be?")
+    make_user_id = input("What would you like your ID to be? ")
     #Possible interaction with other user ids to make sure that they don't match
-    make_user_psswd = input("What would you like your password to be?")
+    make_user_psswd = input("What would you like your password to be? ")
     sql = "INSERT INTO Customer (email, customerFName, customerLName,id, passwd) VALUES (%s, %s, %s, %s, %s)"
     val = ('', '', '', make_user_id, make_user_psswd)
     mycursor.execute(sql,val)
@@ -69,10 +69,10 @@ def librarian_sign_in():
     #Check to see if the user has signed up for the library
     mycursor = mydb.cursor()
     librarian_check = False
-    check_id = int(input("Have you made an adminstrative account at the library? (1 -- yes, 0 -- no)"))
+    check_id = int(input("Have you made an adminstrative account at the library? (1 -- yes, 0 -- no) "))
     user_check = True
     if(check_id):
-         user_id = int(input("What is your user ID?"))
+         user_id = int(input("What is your user ID? "))
          pass_word = input("What is your password? ")
          select_customer_id_query = "SELECT id, passwd FROM Librarian"
          #Looping with all the queries to check that the condition is true
@@ -84,7 +84,7 @@ def librarian_sign_in():
                      print("This works broski")
                      librarian_check = True
     else:
-        make_id = int(input("Would you like to make an adminstrative account at the library? (1 -- yes, 0 --no)"))
+        make_id = int(input("Would you like to make an adminstrative account at the library? (1 -- yes, 0 --no) "))
         if(make_id):
             create_librarian()
         else:
@@ -94,9 +94,9 @@ def librarian_sign_in():
 
 def create_librarian():
     mycursor = mydb.cursor()
-    make_user_id = input("What would you like your username to be?")
+    make_user_id = input("What would you like your username to be? ")
     #Possible interaction with other user ids to make sure that they don't match
-    make_user_psswd = input("What would you like your password to be?")
+    make_user_psswd = input("What would you like your password to be? ")
     sql = "INSERT INTO Librarian (id, passwd, librarianFName, librarianLName, Salary, Hours_Worked, Librarian_Email) VALUES (%s, %s, %s, %s, %s, %s, %s)"
     val = (make_user_id, make_user_psswd, '', '', '', '', '')
     mycursor.execute(sql,val)
@@ -104,7 +104,7 @@ def create_librarian():
     print(mycursor.rowcount, "record inserted.")
 
 def check_librarian_id():
-    user_id = int(input("What is your Librarian ID?"))
+    user_id = int(input("What is your Librarian ID? "))
     pass_word = input("What is your Librarian password? ")
     librarian_check = False
     select_customer_id_query = "SELECT id, passwd FROM Librarian"
@@ -121,7 +121,7 @@ def check_librarian_id():
 def check_out_item(user_login):
     mycursor = mydb.cursor()
     if(user_login == False):
-        print("You may not check out!")
+        print("You may not check out without signing in!")
         quit()
     user_id = int(input("Please enter your user id: "))
     item_id = int(input("Please enter the item id: "))
@@ -131,7 +131,7 @@ def check_out_item(user_login):
         result = cursor.fetchall()
         for row in result:
             if(not isinstance(item_id,int) or row[0] == None):
-                print("We are very sorry but either the item id is invalid or the item is checked out")
+                print("We are very sorry but either the item id is invalid or the item is checked out.")
                 quit()
             else:
                  sql = "UPDATE Item SET Item_Aval =%s, holder_id =%s WHERE id =%s" % (0, user_id, item_id)
@@ -144,7 +144,7 @@ def check_out_item(user_login):
 def check_in_item(user_login):
     mycursor = mydb.cursor()
     if(user_login == False):
-        print("You may not check out!")
+        print("You may not check in without signing in!")
         quit()
     user_id = int(input("Please enter your user id: "))
     item_id = int(input("Please enter the item id: "))
@@ -183,8 +183,8 @@ def AttendEvent():
 # "Done"
 def AddEvent():
     mycursor = mydb.cursor()
-    make_event_id = input("What would you like the event ID to be?")
-    make_event_time = input("What time is the event starting?")
+    make_event_id = input("What would you like the event ID to be? ")
+    make_event_time = input("What time is the event starting? ")
     #Possible interaction with other user ids to make sure that they don't match
     sql = 'INSERT INTO `Event` (`event_id`,`participant_id`,start_dt_time) VALUES (%s, %s, %s)'
     val = (make_event_id, None, make_event_time)
@@ -292,7 +292,7 @@ def addItem() :
 
 def viewItems() :
     mycursor = mydb.cursor()
-    uID = input("Please enter the users id.")
+    uID = int(input("Please enter your user ID: "))
 
     sql = 'SELECT id, itemName FROM Item WHERE holder_id=%s' % (uID)
 
@@ -307,7 +307,7 @@ def viewItems() :
 
 def viewEvent():
     mycursor = mydb.cursor()
-    eID = input("Please enter the event id.")
+    eID = input("Please enter the event ID: ")
 
     sql = 'SELECT start_dt_time FROM Event WHERE event_id=%s' % (eID)
     #val = (eID)
@@ -366,5 +366,3 @@ def runner_trackstar():
 if __name__ == "__main__":
     initDB()
     runner_trackstar()
-
-
